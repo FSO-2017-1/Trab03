@@ -21,7 +21,7 @@ void *print(void *args){
   struct info_thread_t *info = (struct info_thread_t *) args;
   while(!TERMINATE_FLAG){
     // Escrita de arquivo
-    printf("doidão");
+    printf("%d", info->number);
     usleep(150);
   }
 }
@@ -46,8 +46,9 @@ int main(int argc, char const *argv[]) {
   struct info_thread_t info_thread[4];
 
   //Cria 4 threads
-  for (int i = 0; i < 4; i++){
-    printf("%d\n",i);
+  int i;
+  for (i = 0; i < 4; i++){
+    //printf("%d\n",i);
     pthread_create(&thread[i],NULL,&print,&info_thread[i]);
   }
 
@@ -56,15 +57,11 @@ int main(int argc, char const *argv[]) {
   }
 
 if(TERMINATE_FLAG){
-  printf("\nEncerrando a aplicação. Aguardando finalização de threads....\n");
-  for (int i = 0; i < 4; i++){
+  printf("\n[aviso]: Termino Solicitado. Aguardando threads...\n");
+  for (i = 0; i < 4; i++){
      pthread_join(thread[i], NULL);
   }
-  printf("Aplicação encerrada com sucesso!\n"
-      "Informações: \n");
-  for (int i = 0; i < 4; i++){
-    printf("Thread :  linhas\n");
-  }
+  printf("[aviso]: Aplicacao encerrada\n");
   return 0;
 }
 
