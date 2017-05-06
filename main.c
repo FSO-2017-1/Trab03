@@ -12,6 +12,7 @@
 int TERMINATE_FLAG = 0;
 char NAME_FILE[20];
 int NUMBER_THREADS=4; 
+pthread_mutex_t lock;
 
 void set_end_flag(int sig){
   TERMINATE_FLAG = 1;
@@ -19,12 +20,14 @@ void set_end_flag(int sig){
 
 void file_insert(const char* message, FILE* file){
   //Verificar qual é o modo de abertura correto, não é a, nem w
+  pthread_mutex_lock(&lock);
   file = fopen(NAME_FILE,"a");
   if (file == NULL) {
     printf("Error ao abrir arquivo");
   }
   fprintf (file, "%s\n", message);
   fclose(file);
+  pthread_mutex_unlock(&lock);
 }
 
 int terminate_program(){}
@@ -47,6 +50,7 @@ int producer_thread(void *args){
     sprintf(message, "[producao]: Numero gerado: %d", producer_random_number);
 
     file_insert(message, info->file);
+
     // arrumar o tempo gerado
     sleep(1);
     }
