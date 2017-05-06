@@ -28,15 +28,13 @@ void *save_log(void *args){
   }
 }
 
-void file_insert(){
-
-  strcpy(NAME_FILE,strcat(NAME_FILE,".txt"));
-  FILE* file;
-
-  file = fopen(NAME_FILE,"wb");
+void file_insert(const char* message, FILE* file){
+  //Verificar qual é o modo de abertura correto, não é a, nem w
+  file = fopen(NAME_FILE,"a");
   if (file == NULL) {
     printf("Error ao abrir arquivo");
   }
+  fprintf (file, "%s\n", message);
   fclose(file);
 }
 
@@ -44,15 +42,27 @@ int terminate_program(){}
 
 int producer_thread(void *args){
   struct info_thread *info = (struct info_thread *) args;
-  int producer_buffer[BUFFER_SIZE];
+
+  int producer_buffer[BUFFER_SIZE];  
   int i = 0;
-  for(i=0; i<BUFFER_SIZE; i++){
-    while(!TERMINATE_FLAG){   
+  // não esta incrementando o contador
+  
+    while(!TERMINATE_FLAG){
+      for(i=0; i<BUFFER_SIZE; i++){
+      // esta gerando apenas numeros positvos,arrumar   
       int producer_random_number = rand();
       producer_buffer[i] = producer_random_number;
+
       printf("Thread produtora criada");
       printf(" i= %d random number = %d\n", i, producer_random_number);
-      sleep(5);
+
+      char message[20];
+      sprintf(message, "[producao]: Numero gerado: %d", producer_random_number);
+      //char *message = strcat(producer_random_number, "[producao]: Numero gerado: \n");
+
+      file_insert(message, info->file);
+      // arrumar o tempo gerado
+      sleep(1);
     }
   }
 }
@@ -62,15 +72,14 @@ int main(int argc, char const *argv[]) {
 
   int i;
   strcpy(NAME_FILE,argv[1]);
-  //verificar onde é o melho lugar
-  file_insert();
+  strcpy(NAME_FILE,strcat(NAME_FILE,".txt"));
+  FILE* file;
 
   pthread_t thread[NUMBER_THREADS];
-
-
   struct info_thread info_thread[NUMBER_THREADS];
 
   //Cria a thread produtora
+  info_thread[0].file = file;
   pthread_create(&thread[0], NULL, &producer_thread, &info_thread[0]);
 
   //Cria as threads
