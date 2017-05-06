@@ -17,17 +17,6 @@ void set_end_flag(int sig){
   TERMINATE_FLAG = 1;
 }
 
-void *save_log(void *args){
-  struct info_thread *info = (struct info_thread *) args;
-
-
-  while(!TERMINATE_FLAG){
-    // Escrita de arquivo
-    printf("%d\n", info->number);
-    usleep(150);
-  }
-}
-
 void file_insert(const char* message, FILE* file){
   //Verificar qual é o modo de abertura correto, não é a, nem w
   file = fopen(NAME_FILE,"a");
@@ -45,26 +34,24 @@ int producer_thread(void *args){
 
   int producer_buffer[BUFFER_SIZE];  
   int i = 0;
-  // não esta incrementando o contador
-  
-    while(!TERMINATE_FLAG){
-      for(i=0; i<BUFFER_SIZE; i++){
-      // esta gerando apenas numeros positvos,arrumar   
-      int producer_random_number = rand();
-      producer_buffer[i] = producer_random_number;
+  if(TERMINATE_FLAG == 0){
+    for(i=0; i<BUFFER_SIZE; i++){
+    // esta gerando apenas numeros positvos,arrumar   
+    int producer_random_number = rand();
+    producer_buffer[i] = producer_random_number;
 
-      printf("Thread produtora criada");
-      printf(" i= %d random number = %d\n", i, producer_random_number);
+    printf("Thread produtora criada");
+    printf(" i= %d random number = %d\n", i, producer_random_number);
 
-      char message[20];
-      sprintf(message, "[producao]: Numero gerado: %d", producer_random_number);
-      //char *message = strcat(producer_random_number, "[producao]: Numero gerado: \n");
+    char message[20];
+    sprintf(message, "[producao]: Numero gerado: %d", producer_random_number);
 
-      file_insert(message, info->file);
-      // arrumar o tempo gerado
-      sleep(1);
+    file_insert(message, info->file);
+    // arrumar o tempo gerado
+    sleep(1);
     }
   }
+  
 }
 
 int main(int argc, char const *argv[]) {
@@ -79,8 +66,9 @@ int main(int argc, char const *argv[]) {
   struct info_thread info_thread[NUMBER_THREADS];
 
   //Cria a thread produtora
-  info_thread[0].file = file;
-  pthread_create(&thread[0], NULL, &producer_thread, &info_thread[0]);
+  info_thread[1].number = 0;
+  info_thread[1].file = file;
+  pthread_create(&thread[1], NULL, &producer_thread, &info_thread[1]);
 
   //Cria as threads
   /*for (i = 0; i < NUMBER_THREADS; i++){
@@ -94,7 +82,7 @@ int main(int argc, char const *argv[]) {
   if(TERMINATE_FLAG){
     printf("\n[aviso]: Termino Solicitado. Aguardando threads...\n");
     for (i = 0; i < NUMBER_THREADS; i++){
-       pthread_join(thread[i], NULL);
+       pthread_join(thread[0], NULL);
     }
     printf("[aviso]: Aplicacao encerrada\n");
     return 0;
