@@ -10,9 +10,12 @@
 #include "TypeStruct.h"
 
 int TERMINATE_FLAG = 0;
+int BUFFER_ITERATOR = 0;
 char NAME_FILE[20];
 int NUMBER_THREADS=4; 
-pthread_mutex_t lock;
+int producer_buffer[BUFFER_SIZE];  
+
+pthread_mutex_t lock, count_lock;
 
 void set_end_flag(int sig){
   TERMINATE_FLAG = 1;
@@ -32,27 +35,72 @@ void file_insert(const char* message, FILE* file){
 
 int terminate_program(){}
 
+void increment_iterator(){
+  pthread_mutex_lock(&count_lock);
+  BUFFER_ITERATOR++;
+  pthread_mutex_unlock(&count_lock);
+}
+
+void decrement_iterator(){
+  pthread_mutex_lock(&count_lock);
+  BUFFER_ITERATOR--;
+  pthread_mutex_unlock(&count_lock);
+}
+
 int producer_thread(void *args){
+
   struct info_thread *info = (struct info_thread *) args;
 
-  int producer_buffer[BUFFER_SIZE];  
-  int i = 0;
-  if(TERMINATE_FLAG == 0){
-    for(i=0; i<BUFFER_SIZE; i++){
+  while(TERMINATE_FLAG == 0){
+    while(BUFFER_ITERATOR<BUFFER_SIZE){
     // esta gerando apenas numeros positvos,arrumar   
     int producer_random_number = rand();
-    producer_buffer[i] = producer_random_number;
+    producer_buffer[BUFFER_ITERATOR] = producer_random_number;
 
-    printf("Thread produtora criada");
-    printf(" i= %d random number = %d\n", i, producer_random_number);
+    printf("Thread produtora\n");
+    printf(" i= %d random number = %d\n", BUFFER_ITERATOR, producer_random_number);
 
     char message[20];
     sprintf(message, "[producao]: Numero gerado: %d", producer_random_number);
 
     file_insert(message, info->file);
-
+    
+    increment_iterator();
+    
     // arrumar o tempo gerado
     sleep(1);
+
+    }
+  }
+}
+
+// Lembrar que por ser um problema de producer/consumer, quando um buffer é consumido
+// ele deve ser decrementado.
+
+int consumer_thread(void *args){
+  struct info_thread *info = (struct info_thread *) args;
+  
+  while(TERMINATE_FLAG == 0){
+    
+    // definir melhor esse while
+   
+      while(BUFFER_ITERATOR >= 0){      
+        if(BUFFER_ITERATOR > 0){
+          int number = producer_buffer[BUFFER_ITERATOR];
+          printf("\nThread consumidora %s\n", info->type_thread);
+          printf("i=%d numero lido %d\n", BUFFER_ITERATOR, producer_buffer[number]);
+
+          char message[20];
+          sprintf(message, "[consumo %s]: Numero lido: %d", info->type_thread, number);
+          file_insert(message, info->file);
+
+          decrement_iterator();
+
+          // arrumar o tempo
+          sleep(2);
+        }else{
+          // nothing to do
+        }
     }
   }
   
@@ -74,10 +122,13 @@ int main(int argc, char const *argv[]) {
   info_thread[1].file = file;
   pthread_create(&thread[1], NULL, &producer_thread, &info_thread[1]);
 
-  //Cria as threads
-  /*for (i = 0; i < NUMBER_THREADS; i++){
-      pthread_create(&thread[i],NULL,&save_log,&info_thread[i]);
-  }*/
+  //Cria as thread consumidoras
+  info_thread[2].type_thread = "consumo a";
+  pthread_create(&thread[2], NULL, &consumer_thread, &info_thread[2]);
+
+  //info_thread[3].type_thread = "consumo b";
+  //pthread_create(&thread[3], NULL, &consumer_thread, &info_thread[3]);
+
 
   while(!TERMINATE_FLAG){
     signal(SIGINT, set_end_flag);
@@ -85,8 +136,8 @@ int main(int argc, char const *argv[]) {
 
   if(TERMINATE_FLAG){
     printf("\n[aviso]: Termino Solicitado. Aguardando threads...\n");
-    for (i = 0; i < NUMBER_THREADS; i++){
-       pthread_join(thread[0], NULL);
+    for (i = 0; i < 3; i++){
+       pthread_join(thread[i], NULL);
     }
     printf("[aviso]: Aplicacao encerrada\n");
     return 0;
