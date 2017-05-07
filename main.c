@@ -55,17 +55,17 @@ int producer_thread(void *args){
     while(BUFFER_ITERATOR<BUFFER_SIZE){
     // esta gerando apenas numeros positvos,arrumar   
     int producer_random_number = rand();
-    producer_buffer[BUFFER_ITERATOR] = producer_random_number;
 
-    printf("Thread produtora\n");
+    increment_iterator();
+    producer_buffer[BUFFER_ITERATOR] = producer_random_number;
+    
+    printf("\nThread produtora\n");
     printf(" i= %d random number = %d\n", BUFFER_ITERATOR, producer_random_number);
 
     char message[20];
     sprintf(message, "[producao]: Numero gerado: %d", producer_random_number);
 
     file_insert(message, info->file);
-    
-    increment_iterator();
     
     // arrumar o tempo gerado
     sleep(1);
@@ -83,15 +83,14 @@ int consumer_thread(void *args){
   while(TERMINATE_FLAG == 0){
     
     // definir melhor esse while
-   
       while(BUFFER_ITERATOR >= 0){      
         if(BUFFER_ITERATOR > 0){
-          int number = producer_buffer[BUFFER_ITERATOR];
-          printf("\nThread consumidora %s\n", info->type_thread);
+          int number = BUFFER_ITERATOR;
+          printf("Thread consumidora %s\n", info->type_thread);
           printf("i=%d numero lido %d\n", BUFFER_ITERATOR, producer_buffer[number]);
 
           char message[20];
-          sprintf(message, "[consumo %s]: Numero lido: %d", info->type_thread, number);
+          sprintf(message, "[consumo %s]: Numero lido: %d", info->type_thread, producer_buffer[number]);
           file_insert(message, info->file);
 
           decrement_iterator();
