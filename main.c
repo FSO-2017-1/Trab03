@@ -15,7 +15,7 @@ char NAME_FILE[20];
 int NUMBER_THREADS=4; 
 int producer_buffer[BUFFER_SIZE];  
 
-pthread_mutex_t lock, count_lock;
+pthread_mutex_t lock, count_lock, decount_lock, consumer_lock;
 
 void set_end_flag(int sig){
   TERMINATE_FLAG = 1;
@@ -42,9 +42,9 @@ void increment_iterator(){
 }
 
 void decrement_iterator(){
-  pthread_mutex_lock(&count_lock);
+  pthread_mutex_lock(&decount_lock);
   BUFFER_ITERATOR--;
-  pthread_mutex_unlock(&count_lock);
+  pthread_mutex_unlock(&decount_lock);
 }
 
 int producer_thread(void *args){
@@ -74,29 +74,32 @@ int producer_thread(void *args){
   }
 }
 
-// Lembrar que por ser um problema de producer/consumer, quando um buffer é consumido
-// ele deve ser decrementado.
-
 int consumer_thread(void *args){
   struct info_thread *info = (struct info_thread *) args;
-  while(BUFFER_ITERATOR >=0){          
-    //if(BUFFER_ITERATOR > 0){
+
+  //Melhorar essa condição, o programa não está encerrando corretamente.
+  while(BUFFER_ITERATOR >=0){
+    pthread_mutex_lock(&consumer_lock);
+    if(BUFFER_ITERATOR > 0){ 
+     
       int number = BUFFER_ITERATOR;
       printf("Thread consumidora %s\n", info->type_thread);
       printf("i=%d numero lido %d\n", BUFFER_ITERATOR, producer_buffer[number]);
 
       char message[20];
-      sprintf(message, "[consumo %s]: Numero lido: %d", info->type_thread, producer_buffer[number]);
+      sprintf(message, "[%s]: Numero lido: %d", info->type_thread, producer_buffer[number]);
       file_insert(message, info->file);
 
       decrement_iterator();
 
       // arrumar o tempo
-      sleep(2);
-    //}else{
-      // nothing to do
-    //}
+      
+      
+    }
+    pthread_mutex_unlock(&consumer_lock);
+    sleep(2);
   }
+  
 }
 
 int main(int argc, char const *argv[]) {
@@ -119,8 +122,8 @@ int main(int argc, char const *argv[]) {
   info_thread[2].type_thread = "consumo a";
   pthread_create(&thread[2], NULL, &consumer_thread, &info_thread[2]);
 
-  //info_thread[3].type_thread = "consumo b";
-  //pthread_create(&thread[3], NULL, &consumer_thread, &info_thread[3]);
+  info_thread[3].type_thread = "consumo b";
+  pthread_create(&thread[3], NULL, &consumer_thread, &info_thread[3]);
 
 
   while(!TERMINATE_FLAG){
@@ -129,8 +132,8 @@ int main(int argc, char const *argv[]) {
 
   if(TERMINATE_FLAG){
     printf("\n[aviso]: Termino Solicitado. Aguardando threads...\n");
-    for (i = 0; i < 3; i++){
-       pthread_join(thread[i], NULL);
+    for (i = 0; i <= 3; i++){
+      pthread_join(thread[i], NULL);
     }
     printf("[aviso]: Aplicacao encerrada\n");
     return 0;
