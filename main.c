@@ -47,6 +47,22 @@ void decrement_iterator(){
   pthread_mutex_unlock(&decount_lock);
 }
 
+void add_biggest_value(struct info_thread *thread, int value){
+  int actual_value = thread->biggest_value;
+  if(value > actual_value){
+    thread->biggest_value = value;
+  }
+
+}
+
+void add_smallest_value(struct info_thread *thread, int value){
+  int actual_value = thread->smallest_value;
+  if(value < actual_value){
+    thread->smallest_value = value;
+  }
+
+}
+
 int producer_thread(void *args){
 
   struct info_thread *info = (struct info_thread *) args;
@@ -89,17 +105,41 @@ int consumer_thread(void *args){
       char message[20];
       sprintf(message, "[%s]: Numero lido: %d", info->type_thread, producer_buffer[number]);
       file_insert(message, info->file);
+      add_biggest_value(info, producer_buffer[number]);
+      add_smallest_value(info, producer_buffer[number]);
 
-      decrement_iterator();
+      printf("\nMAIOR NUMERO DA THREAD %s %d\n", info->type_thread, info->biggest_value);
+      printf("MENOR NUMERO DA THREAD %s %d\n", info->type_thread, info->smallest_value);
 
-      // arrumar o tempo
-      
+      decrement_iterator();      
       
     }
     pthread_mutex_unlock(&consumer_lock);
+     // arrumar o tempo
     sleep(2);
   }
-  
+}
+
+void get_biggest_number(struct info_thread *threadA, struct info_thread *threadB){
+  char message[30];
+  if(threadA->biggest_value > threadB->biggest_value){
+    sprintf(message, "[aviso]: Maior numero gerado: %d", threadA->biggest_value);
+  }else if (threadB->biggest_value > threadA->biggest_value){
+    sprintf(message, "[aviso]: Maior numero gerado: %d", threadB->biggest_value);
+  }else{
+    sprintf(message, "[aviso]: Maior numero gerado: %d", threadB->biggest_value);
+  }
+}
+
+void get_smallest_number(struct info_thread *threadA, struct info_thread *threadB){
+  char message[30];
+  if(threadA->smallest_value > threadB->smallest_value){
+    sprintf(message, "[aviso]: Maior numero gerado: %d", threadA->smallest_value);
+  }else if (threadB->smallest_value > threadA->smallest_value){
+    sprintf(message, "[aviso]: Maior numero gerado: %d", threadB->smallest_value);
+  }else{
+    sprintf(message, "[aviso]: Maior numero gerado: %d", threadB->smallest_value);
+  }
 }
 
 int main(int argc, char const *argv[]) {
@@ -114,15 +154,19 @@ int main(int argc, char const *argv[]) {
   struct info_thread info_thread[NUMBER_THREADS];
 
   //Cria a thread produtora
-  info_thread[1].number = 0;
+  info_thread[1].number = 1;
   info_thread[1].file = file;
   pthread_create(&thread[1], NULL, &producer_thread, &info_thread[1]);
 
   //Cria as thread consumidoras
   info_thread[2].type_thread = "consumo a";
+  info_thread[2].biggest_value = 0;
+  info_thread[2].smallest_value = 99999999999;
   pthread_create(&thread[2], NULL, &consumer_thread, &info_thread[2]);
 
   info_thread[3].type_thread = "consumo b";
+  info_thread[3].biggest_value = 0;
+  info_thread[3].smallest_value = 99999999999;
   pthread_create(&thread[3], NULL, &consumer_thread, &info_thread[3]);
 
 
@@ -135,6 +179,8 @@ int main(int argc, char const *argv[]) {
     for (i = 0; i <= 3; i++){
       pthread_join(thread[i], NULL);
     }
+    get_biggest_number(thread[2], thread[3]);
+    get_smallest_number(thread[2], thread[3]);
     printf("[aviso]: Aplicacao encerrada\n");
     return 0;
   }
