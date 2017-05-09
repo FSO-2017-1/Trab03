@@ -1,0 +1,45 @@
+[producao]: Numero gerado: 1150844987
+[consumo a]: Numero lido: 1150844987
+[producao]: Numero gerado: 56599239
+[consumo a]: Numero lido: 56599239
+[producao]: Numero gerado: 1058237114
+[consumo b]: Numero lido: 56599239
+
+[aviso]: Termino Solicitado. Aguardando threads...
+
+[aviso]: Maior numero gerado: 1150844987
+[producao]: Numero gerado: 1693813394
+[consumo a]: Numero lido: 1693813394
+[producao]: Numero gerado: 1258820611
+[consumo b]: Numero lido: 1258820611
+[consumo a]: Numero lido: 1258820611
+[producao]: Numero gerado: 730073148
+[producao]: Numero gerado: 1940476811
+[consumo b]: Numero lido: 1940476811
+[producao]: Numero gerado: 170919749
+[producao]: Numero gerado: 1342691466
+
+[aviso]: Termino Solicitado. Aguardando threads...
+
+[aviso]: Maior numero gerado: 1940476811
+[consumo a]: Numero lido: 1218655002
+[producao]: Numero gerado: 1218655002
+[producao]: Numero gerado: 114982913
+[consumo a]: Numero lido: 114982913
+[producao]: Numero gerado: 692038304
+[producao]: Numero gerado: 1510541604
+[consumo a]: Numero lido: 1510541604
+[consumo b]: Numero lido: 692038304
+[producao]: Numero gerado: 488800443
+[producao]: Numero gerado: 1286879994
+[consumo a]: Numero lido: 1286879994
+[consumo b]: Numero lido: 692038304
+[producao]: Numero gerado: 1966802343
+[producao]: Numero gerado: 996229521
+[consumo a]: Numero lido: 996229521
+[consumo b]: Numero lido: 1966802343
+[producao]: Numero gerado: 1894767775
+
+[aviso]: Termino Solicitado. Aguardando threads...
+
+[aviso]: Maior numero gerado: 1966802343

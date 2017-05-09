@@ -12,8 +12,8 @@
 int TERMINATE_FLAG = 0;
 int BUFFER_ITERATOR = 0;
 char NAME_FILE[20];
-int NUMBER_THREADS=4; 
-int producer_buffer[BUFFER_SIZE];  
+int NUMBER_THREADS=4;
+int producer_buffer[BUFFER_SIZE];
 
 pthread_mutex_t lock, count_lock, decount_lock, consumer_lock;
 
@@ -52,7 +52,6 @@ void add_biggest_value(struct info_thread *thread, int value){
   if(value > actual_value){
     thread->biggest_value = value;
   }
-
 }
 
 void add_smallest_value(struct info_thread *thread, int value){
@@ -63,13 +62,11 @@ void add_smallest_value(struct info_thread *thread, int value){
 
 }
 
-int producer_thread(void *args){
-
-  struct info_thread *info = (struct info_thread *) args;
-
+int producer_thread(struct info_thread *info,void *args){
+  // struct info_thread *info = (struct info_thread *) args;
   while(BUFFER_ITERATOR<BUFFER_SIZE){
     while(TERMINATE_FLAG == 0){
-      // esta gerando apenas numeros positvos,arrumar   
+      // esta gerando apenas numeros positvos,arrumar
       int producer_random_number = rand();
 
       increment_iterator();
@@ -77,12 +74,9 @@ int producer_thread(void *args){
 
       printf("\nThread produtora\n");
       printf(" i= %d random number = %d\n", BUFFER_ITERATOR, producer_random_number);
-
       char message[20];
       sprintf(message, "[producao]: Numero gerado: %d", producer_random_number);
-
       file_insert(message, info->file);
-      
       // arrumar o tempo gerado
       sleep(1);
 
@@ -90,14 +84,14 @@ int producer_thread(void *args){
   }
 }
 
-int consumer_thread(void *args){
-  struct info_thread *info = (struct info_thread *) args;
+int consumer_thread(struct info_thread *info,void *args){
+  // struct info_thread *info = (struct info_thread *) args;
 
   //Melhorar essa condição, o programa não está encerrando corretamente.
   while(BUFFER_ITERATOR >=0){
     pthread_mutex_lock(&consumer_lock);
-    if(BUFFER_ITERATOR > 0){ 
-     
+    if(BUFFER_ITERATOR > 0){
+
       int number = BUFFER_ITERATOR;
       printf("Thread consumidora %s\n", info->type_thread);
       printf("i=%d numero lido %d\n", BUFFER_ITERATOR, producer_buffer[number]);
@@ -111,8 +105,8 @@ int consumer_thread(void *args){
       printf("\nMAIOR NUMERO DA THREAD %s %d\n", info->type_thread, info->biggest_value);
       printf("MENOR NUMERO DA THREAD %s %d\n", info->type_thread, info->smallest_value);
 
-      decrement_iterator();      
-      
+      decrement_iterator();
+
     }
     pthread_mutex_unlock(&consumer_lock);
      // arrumar o tempo
@@ -121,6 +115,9 @@ int consumer_thread(void *args){
 }
 
 void get_biggest_number(struct info_thread *threadA, struct info_thread *threadB){
+  printf(" AAA MAIOR %d \n",threadA->biggest_value );
+  printf(" BBB MAIOR %d \n",threadB->biggest_value );
+
   char message[30];
   if(threadA->biggest_value > threadB->biggest_value){
     sprintf(message, "[aviso]: Maior numero gerado: %d", threadA->biggest_value);
@@ -129,17 +126,20 @@ void get_biggest_number(struct info_thread *threadA, struct info_thread *threadB
   }else{
     sprintf(message, "[aviso]: Maior numero gerado: %d", threadB->biggest_value);
   }
+  file_insert(message,threadA->file);
 }
 
 void get_smallest_number(struct info_thread *threadA, struct info_thread *threadB){
   char message[30];
-  if(threadA->smallest_value > threadB->smallest_value){
-    sprintf(message, "[aviso]: Maior numero gerado: %d", threadA->smallest_value);
-  }else if (threadB->smallest_value > threadA->smallest_value){
-    sprintf(message, "[aviso]: Maior numero gerado: %d", threadB->smallest_value);
+  if(threadA->smallest_value < threadB->smallest_value){
+    sprintf(message, "[aviso]: Menor numero gerado: %d", threadA->smallest_value);
+  }else if (threadB->smallest_value < threadA->smallest_value){
+    sprintf(message, "[aviso]: Menor numero gerado: %d", threadB->smallest_value);
   }else{
-    sprintf(message, "[aviso]: Maior numero gerado: %d", threadB->smallest_value);
+    sprintf(message, "[aviso]: Menor numero gerado: %d", threadB->smallest_value);
   }
+  file_insert(message,threadA->file);
+
 }
 
 int main(int argc, char const *argv[]) {
@@ -169,18 +169,20 @@ int main(int argc, char const *argv[]) {
   info_thread[3].smallest_value = 99999999999;
   pthread_create(&thread[3], NULL, &consumer_thread, &info_thread[3]);
 
-
   while(!TERMINATE_FLAG){
     signal(SIGINT, set_end_flag);
   }
 
   if(TERMINATE_FLAG){
+
     printf("\n[aviso]: Termino Solicitado. Aguardando threads...\n");
-    for (i = 0; i <= 3; i++){
-      pthread_join(thread[i], NULL);
+    file_insert("\n[aviso]: Termino Solicitado. Aguardando threads...\n", info_thread[1].file);
+    for (i = 1; i <= 3; i++){
+      pthread_testcancel();
+      pthread_cancel(thread[i]);
     }
-    get_biggest_number(thread[2], thread[3]);
-    get_smallest_number(thread[2], thread[3]);
+    get_biggest_number(&info_thread[2], &info_thread[3]);
+    get_smallest_number(&info_thread[2], &info_thread[3]);
     printf("[aviso]: Aplicacao encerrada\n");
     return 0;
   }
