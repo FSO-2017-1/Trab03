@@ -14,6 +14,7 @@ int BUFFER_ITERATOR = 0;
 char NAME_FILE[20];
 int NUMBER_THREADS=4;
 int producer_buffer[BUFFER_SIZE];
+int buffer_tam_max=0;
 
 pthread_mutex_t lock, count_lock, decount_lock, consumer_lock;
 
@@ -21,7 +22,7 @@ void set_end_flag(int sig){
   TERMINATE_FLAG = 1;
 }
 
-void file_insert_smallest(const char* message, FILE* file){
+void file_insert_smallest(const int message, FILE* file){
   //Verificar qual é o modo de abertura correto, não é a, nem w
   pthread_mutex_lock(&lock);
   file = fopen(NAME_FILE,"a");
@@ -33,7 +34,7 @@ void file_insert_smallest(const char* message, FILE* file){
   pthread_mutex_unlock(&lock);
 }
 
-void file_insert_biggest(const char* message, FILE* file){
+void file_insert_biggest(const int message, FILE* file){
   //Verificar qual é o modo de abertura correto, não é a, nem w
   pthread_mutex_lock(&lock);
   file = fopen(NAME_FILE,"a");
@@ -88,10 +89,13 @@ void add_smallest_value(struct info_thread *thread, int value){
 
 }
 
-int producer_thread(struct info_thread *info,void *args){
+void producer_thread(struct info_thread *info,void *args){
   // struct info_thread *info = (struct info_thread *) args;
   while(BUFFER_ITERATOR<BUFFER_SIZE){
     while(TERMINATE_FLAG == 0){
+      if(buffer_tam_max <= BUFFER_ITERATOR){
+        buffer_tam_max++;
+      }
       // esta gerando apenas numeros positvos,arrumar
       int producer_random_number = rand();
 
@@ -110,7 +114,7 @@ int producer_thread(struct info_thread *info,void *args){
   }
 }
 
-int consumer_thread(struct info_thread *info,void *args){
+void consumer_thread(struct info_thread *info,void *args){
   // struct info_thread *info = (struct info_thread *) args;
 
   //Melhorar essa condição, o programa não está encerrando corretamente.
@@ -136,7 +140,7 @@ int consumer_thread(struct info_thread *info,void *args){
     }
     pthread_mutex_unlock(&consumer_lock);
      // arrumar o tempo
-    sleep(2);
+    sleep(3);
   }
 }
 
@@ -147,17 +151,6 @@ int handler_thread(struct info_thread *info,void *args){
 
 
 
-
-
-void end_program(int signal,struct info_thread *info_thread){
-
-  printf("\n[aviso]: Termino Solicitado. Aguardando threads...\n");
-  file_insert("\n[aviso]: Termino Solicitado. Aguardando threads...\n", info_thread[1].file);
-  get_biggest_number(&info_thread[2], &info_thread[3]);
-  get_smallest_number(&info_thread[2], &info_thread[3]);
-  printf("[aviso]: Aplicacao encerrada\n");
-
-}
 
 
 void get_biggest_number(struct info_thread *threadA, struct info_thread *threadB){
@@ -187,6 +180,17 @@ void get_smallest_number(struct info_thread *threadA, struct info_thread *thread
     value =  threadB->smallest_value;
   }
   file_insert_smallest(value,threadA->file);
+}
+
+
+void end_program(int signal,struct info_thread *info_thread){
+
+  printf("\n[aviso]: Termino Solicitado. Aguardando threads...\n");
+  file_insert("\n[aviso]: Termino Solicitado. Aguardando threads...\n", info_thread[1].file);
+  get_biggest_number(&info_thread[2], &info_thread[3]);
+  get_smallest_number(&info_thread[2], &info_thread[3]);
+  printf("[aviso]: Aplicacao encerrada\n");
+
 }
 
 int main(int argc, char const *argv[]) {
@@ -224,12 +228,23 @@ int main(int argc, char const *argv[]) {
     signal(SIGINT, set_end_flag);
   }
 
+  printf("\n \n mamilinhos %d\n", buffer_tam_max);
   if(TERMINATE_FLAG){
-    get_biggest_number(&info_thread[1], &info_thread[2]);
-    get_smallest_number(&info_thread[1], &info_thread[2]);
+    file_insert("\n[aviso]: Termino Solicitado. Aguardando threads...\n", info_thread[0].file);
+
+    get_biggest_number(&info_thread[2], &info_thread[3]);
+    get_smallest_number(&info_thread[2], &info_thread[3]);
+
+    char message[20];
+    sprintf(message, "[aviso]: Maior ocupacao de buffer: %d\n", buffer_tam_max);
+    file_insert(message, info_thread[0].file);
+
     pthread_cancel (&info_thread[0]);
     pthread_cancel (&info_thread[1]);
     pthread_cancel (&info_thread[2]);
+    pthread_cancel (&info_thread[3]);
+
+    file_insert("\n[aviso]: Aplicacao encerrada.\n", info_thread[0].file);
     signal(SIGINT,end_program);
     return 0;
   }
