@@ -21,6 +21,32 @@ void set_end_flag(int sig){
   TERMINATE_FLAG = 1;
 }
 
+void file_insert_smallest(const char* message, FILE* file){
+  //Verificar qual é o modo de abertura correto, não é a, nem w
+  pthread_mutex_lock(&lock);
+  file = fopen(NAME_FILE,"a");
+  if (file == NULL) {
+    printf("Error ao abrir arquivo");
+  }
+  fprintf (file, "\n[aviso]: Menor numero gerado: %d", message);
+  fclose(file);
+  pthread_mutex_unlock(&lock);
+}
+
+void file_insert_biggest(const char* message, FILE* file){
+  //Verificar qual é o modo de abertura correto, não é a, nem w
+  pthread_mutex_lock(&lock);
+  file = fopen(NAME_FILE,"a");
+  if (file == NULL) {
+    printf("Error ao abrir arquivo");
+  }
+  fprintf (file, "\n[aviso]: Maior numero gerado: %d", message);
+  fclose(file);
+  pthread_mutex_unlock(&lock);
+}
+
+
+
 void file_insert(const char* message, FILE* file){
   //Verificar qual é o modo de abertura correto, não é a, nem w
   pthread_mutex_lock(&lock);
@@ -114,32 +140,53 @@ int consumer_thread(struct info_thread *info,void *args){
   }
 }
 
-void get_biggest_number(struct info_thread *threadA, struct info_thread *threadB){
-  printf(" AAA MAIOR %d \n",threadA->biggest_value );
-  printf(" BBB MAIOR %d \n",threadB->biggest_value );
 
-  char message[30];
-  if(threadA->biggest_value > threadB->biggest_value){
-    sprintf(message, "[aviso]: Maior numero gerado: %d", threadA->biggest_value);
-  }else if (threadB->biggest_value > threadA->biggest_value){
-    sprintf(message, "[aviso]: Maior numero gerado: %d", threadB->biggest_value);
-  }else{
-    sprintf(message, "[aviso]: Maior numero gerado: %d", threadB->biggest_value);
+int handler_thread(struct info_thread *info,void *args){
+
   }
-  file_insert(message,threadA->file);
+
+
+
+
+
+void end_program(int signal,struct info_thread *info_thread){
+
+  printf("\n[aviso]: Termino Solicitado. Aguardando threads...\n");
+  file_insert("\n[aviso]: Termino Solicitado. Aguardando threads...\n", info_thread[1].file);
+  get_biggest_number(&info_thread[2], &info_thread[3]);
+  get_smallest_number(&info_thread[2], &info_thread[3]);
+  printf("[aviso]: Aplicacao encerrada\n");
+
+}
+
+
+void get_biggest_number(struct info_thread *threadA, struct info_thread *threadB){
+
+  int value;
+
+  if(threadA->biggest_value > threadB->biggest_value){
+    value = threadA->biggest_value;
+  }else if (threadB->biggest_value > threadA->biggest_value){
+    value = threadB->biggest_value;
+  }else{
+    value = threadA->biggest_value;
+  }
+
+  file_insert_biggest(value,threadA->file);
 }
 
 void get_smallest_number(struct info_thread *threadA, struct info_thread *threadB){
-  char message[30];
-  if(threadA->smallest_value < threadB->smallest_value){
-    sprintf(message, "[aviso]: Menor numero gerado: %d", threadA->smallest_value);
-  }else if (threadB->smallest_value < threadA->smallest_value){
-    sprintf(message, "[aviso]: Menor numero gerado: %d", threadB->smallest_value);
-  }else{
-    sprintf(message, "[aviso]: Menor numero gerado: %d", threadB->smallest_value);
-  }
-  file_insert(message,threadA->file);
 
+  int value;
+
+  if(threadA->smallest_value < threadB->smallest_value){
+    value =  threadA->smallest_value;
+  }else if (threadB->smallest_value < threadA->smallest_value){
+    value =  threadB->smallest_value;
+  }else{
+    value =  threadB->smallest_value;
+  }
+  file_insert_smallest(value,threadA->file);
 }
 
 int main(int argc, char const *argv[]) {
@@ -169,21 +216,21 @@ int main(int argc, char const *argv[]) {
   info_thread[3].smallest_value = 99999999999;
   pthread_create(&thread[3], NULL, &consumer_thread, &info_thread[3]);
 
+  info_thread[0].type_thread = "handler";
+  info_thread[0].file = file;
+  pthread_create(&thread[0], NULL, &handler_thread, &info_thread[0]);
+
   while(!TERMINATE_FLAG){
     signal(SIGINT, set_end_flag);
   }
 
   if(TERMINATE_FLAG){
-
-    printf("\n[aviso]: Termino Solicitado. Aguardando threads...\n");
-    file_insert("\n[aviso]: Termino Solicitado. Aguardando threads...\n", info_thread[1].file);
-    for (i = 1; i <= 3; i++){
-      pthread_testcancel();
-      pthread_cancel(thread[i]);
-    }
-    get_biggest_number(&info_thread[2], &info_thread[3]);
-    get_smallest_number(&info_thread[2], &info_thread[3]);
-    printf("[aviso]: Aplicacao encerrada\n");
+    get_biggest_number(&info_thread[1], &info_thread[2]);
+    get_smallest_number(&info_thread[1], &info_thread[2]);
+    pthread_cancel (&info_thread[0]);
+    pthread_cancel (&info_thread[1]);
+    pthread_cancel (&info_thread[2]);
+    signal(SIGINT,end_program);
     return 0;
   }
 
