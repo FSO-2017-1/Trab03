@@ -23,7 +23,6 @@ void set_end_flag(int sig){
 }
 
 void file_insert_smallest(const int message, FILE* file){
-  //Verificar qual é o modo de abertura correto, não é a, nem w
   pthread_mutex_lock(&lock);
   file = fopen(NAME_FILE,"a");
   if (file == NULL) {
@@ -35,7 +34,6 @@ void file_insert_smallest(const int message, FILE* file){
 }
 
 void file_insert_biggest(const int message, FILE* file){
-  //Verificar qual é o modo de abertura correto, não é a, nem w
   pthread_mutex_lock(&lock);
   file = fopen(NAME_FILE,"a");
   if (file == NULL) {
@@ -46,36 +44,7 @@ void file_insert_biggest(const int message, FILE* file){
   pthread_mutex_unlock(&lock);
 }
 
-void file_insert_finalize_program(struct info_thread *info_thread){
-
-  file_insert("\n[aviso]: Termino Solicitado. Aguardando threads...\n", info_thread[0].file);
-
-  get_biggest_number(&info_thread[2], &info_thread[3]);
-  get_smallest_number(&info_thread[2], &info_thread[3]);
-  file_insert_biggestbuffer(buffer_tam_max, info_thread[0].file);
-
-  pthread_cancel (&info_thread[0]);
-  pthread_cancel (&info_thread[1]);
-  pthread_cancel (&info_thread[2]);
-  pthread_cancel (&info_thread[3]);
-
-  file_insert("\n[aviso]: Aplicacao encerrada.\n", info_thread[0].file);
-
-  // //Verificar qual é o modo de abertura correto, não é a, nem w
-  // pthread_mutex_lock(&lock);
-  // file = fopen(NAME_FILE,"a");
-  // if (file == NULL) {
-  //   printf("Error ao abrir arquivo");
-  // }
-  // fprintf (file, "\n[aviso]: Maior numero gerado: %d", message);
-  // fclose(file);
-  // pthread_mutex_unlock(&lock);
-
-
-
-}
-void file_insert_biggestbuffer(const char* message, FILE* file){
-  //Verificar qual é o modo de abertura correto, não é a, nem w
+void file_insert_biggestbuffer(const int message, FILE* file){
   pthread_mutex_lock(&lock);
   file = fopen(NAME_FILE,"a");
   if (file == NULL) {
@@ -86,9 +55,24 @@ void file_insert_biggestbuffer(const char* message, FILE* file){
   pthread_mutex_unlock(&lock);
 }
 
+void file_insert_finalize_program(pthread_t *thread, struct info_thread *info_thread){
+
+  file_insert("\n[aviso]: Termino Solicitado. Aguardando threads...", info_thread[0].file);
+
+  get_biggest_number(&info_thread[2], &info_thread[3]);
+  get_smallest_number(&info_thread[2], &info_thread[3]);
+  file_insert_biggestbuffer(buffer_tam_max, info_thread[0].file);
+
+  pthread_cancel (thread[0]);
+  pthread_cancel (thread[1]);
+  pthread_cancel (thread[2]);
+  pthread_cancel (thread[3]);
+
+  file_insert("\n[aviso]: Aplicacao encerrada.\n", info_thread[0].file);
+
+}
 
 void file_insert(const char* message, FILE* file){
-  //Verificar qual é o modo de abertura correto, não é a, nem w
   pthread_mutex_lock(&lock);
   file = fopen(NAME_FILE,"a");
   if (file == NULL) {
@@ -99,7 +83,6 @@ void file_insert(const char* message, FILE* file){
   pthread_mutex_unlock(&lock);
 }
 
-int terminate_program(){}
 
 void increment_iterator(){
   pthread_mutex_lock(&count_lock);
@@ -129,7 +112,6 @@ void add_smallest_value(struct info_thread *thread, int value){
 }
 
 void producer_thread(struct info_thread *info,void *args){
-  // struct info_thread *info = (struct info_thread *) args;
   while(BUFFER_ITERATOR<BUFFER_SIZE){
     while(TERMINATE_FLAG == 0){
       if(buffer_tam_max <= BUFFER_ITERATOR){
@@ -141,53 +123,40 @@ void producer_thread(struct info_thread *info,void *args){
       increment_iterator();
       producer_buffer[BUFFER_ITERATOR] = producer_random_number;
 
-      printf("\nThread produtora\n");
-      printf(" i= %d random number = %d\n", BUFFER_ITERATOR, producer_random_number);
       char message[20];
       sprintf(message, "[producao]: Numero gerado: %d", producer_random_number);
       file_insert(message, info->file);
-      // arrumar o tempo gerado
-      sleep(1);
+      
+      usleep(100000);
 
       }
   }
 }
 
 void consumer_thread(struct info_thread *info,void *args){
-  // struct info_thread *info = (struct info_thread *) args;
-
-  //Melhorar essa condição, o programa não está encerrando corretamente.
   while(BUFFER_ITERATOR >=0){
     pthread_mutex_lock(&consumer_lock);
     if(BUFFER_ITERATOR > 0){
 
       int number = BUFFER_ITERATOR;
-      printf("Thread consumidora %s\n", info->type_thread);
-      printf("i=%d numero lido %d\n", BUFFER_ITERATOR, producer_buffer[number]);
-
+    
       char message[20];
       sprintf(message, "[%s]: Numero lido: %d", info->type_thread, producer_buffer[number]);
       file_insert(message, info->file);
       add_biggest_value(info, producer_buffer[number]);
       add_smallest_value(info, producer_buffer[number]);
 
-      printf("\nMAIOR NUMERO DA THREAD %s %d\n", info->type_thread, info->biggest_value);
-      printf("MENOR NUMERO DA THREAD %s %d\n", info->type_thread, info->smallest_value);
-
       decrement_iterator();
-
     }
+
     pthread_mutex_unlock(&consumer_lock);
-     // arrumar o tempo
-    sleep(3);
+
+    usleep(150000);
   }
 }
 
 
 int handler_thread(struct info_thread *info,void *args){}
-
-
-
 
 
 void get_biggest_number(struct info_thread *threadA, struct info_thread *threadB){
@@ -266,7 +235,7 @@ int main(int argc, char const *argv[]) {
   }
 
   if(TERMINATE_FLAG){
-    file_insert_finalize_program(info_thread);
+    file_insert_finalize_program(thread, info_thread);
     signal(SIGINT,end_program);
     return 0;
   }
