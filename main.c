@@ -46,6 +46,45 @@ void file_insert_biggest(const int message, FILE* file){
   pthread_mutex_unlock(&lock);
 }
 
+void file_insert_finalize_program(struct info_thread *info_thread){
+
+  file_insert("\n[aviso]: Termino Solicitado. Aguardando threads...\n", info_thread[0].file);
+
+  get_biggest_number(&info_thread[2], &info_thread[3]);
+  get_smallest_number(&info_thread[2], &info_thread[3]);
+  file_insert_biggestbuffer(buffer_tam_max, info_thread[0].file);
+
+  pthread_cancel (&info_thread[0]);
+  pthread_cancel (&info_thread[1]);
+  pthread_cancel (&info_thread[2]);
+  pthread_cancel (&info_thread[3]);
+
+  file_insert("\n[aviso]: Aplicacao encerrada.\n", info_thread[0].file);
+
+  // //Verificar qual é o modo de abertura correto, não é a, nem w
+  // pthread_mutex_lock(&lock);
+  // file = fopen(NAME_FILE,"a");
+  // if (file == NULL) {
+  //   printf("Error ao abrir arquivo");
+  // }
+  // fprintf (file, "\n[aviso]: Maior numero gerado: %d", message);
+  // fclose(file);
+  // pthread_mutex_unlock(&lock);
+
+
+
+}
+void file_insert_biggestbuffer(const char* message, FILE* file){
+  //Verificar qual é o modo de abertura correto, não é a, nem w
+  pthread_mutex_lock(&lock);
+  file = fopen(NAME_FILE,"a");
+  if (file == NULL) {
+    printf("Error ao abrir arquivo");
+  }
+  fprintf (file, "\n[aviso]: Maior ocupacao de buffer: %d\n", message);
+  fclose(file);
+  pthread_mutex_unlock(&lock);
+}
 
 
 void file_insert(const char* message, FILE* file){
@@ -145,9 +184,7 @@ void consumer_thread(struct info_thread *info,void *args){
 }
 
 
-int handler_thread(struct info_thread *info,void *args){
-
-  }
+int handler_thread(struct info_thread *info,void *args){}
 
 
 
@@ -228,23 +265,8 @@ int main(int argc, char const *argv[]) {
     signal(SIGINT, set_end_flag);
   }
 
-  printf("\n \n mamilinhos %d\n", buffer_tam_max);
   if(TERMINATE_FLAG){
-    file_insert("\n[aviso]: Termino Solicitado. Aguardando threads...\n", info_thread[0].file);
-
-    get_biggest_number(&info_thread[2], &info_thread[3]);
-    get_smallest_number(&info_thread[2], &info_thread[3]);
-
-    char message[20];
-    sprintf(message, "[aviso]: Maior ocupacao de buffer: %d\n", buffer_tam_max);
-    file_insert(message, info_thread[0].file);
-
-    pthread_cancel (&info_thread[0]);
-    pthread_cancel (&info_thread[1]);
-    pthread_cancel (&info_thread[2]);
-    pthread_cancel (&info_thread[3]);
-
-    file_insert("\n[aviso]: Aplicacao encerrada.\n", info_thread[0].file);
+    file_insert_finalize_program(info_thread);
     signal(SIGINT,end_program);
     return 0;
   }

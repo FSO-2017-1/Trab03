@@ -1,17 +1,69 @@
+[producao]: Numero gerado: 1325464637
+[consumo a]: Numero lido: 1325464637
+[producao]: Numero gerado: 322860537
+[producao]: Numero gerado: 1868619858
+[consumo b]: Numero lido: 1868619858
+[producao]: Numero gerado: 1670062154
+[consumo a]: Numero lido: 1670062154
+[producao]: Numero gerado: 736345394
+[producao]: Numero gerado: 32925626
+[consumo b]: Numero lido: 32925626
+[consumo a]: Numero lido: 736345394
+[producao]: Numero gerado: 905611869
+[producao]: Numero gerado: 2110487419
+[producao]: Numero gerado: 1469603509
 
-[aviso]: Menor numero gerado: 0[consumo a]: Numero lido: 1090249268
-[producao]: Numero gerado: 1090249268
-[producao]: Numero gerado: 1501941398
-[consumo a]: Numero lido: 1501941398
-[producao]: Numero gerado: 1654792197
-[producao]: Numero gerado: 1203756580
-[consumo a]: Numero lido: 1203756580
-[consumo b]: Numero lido: 1654792197
-[producao]: Numero gerado: 67295531
-[producao]: Numero gerado: 210709446
-[consumo a]: Numero lido: 210709446
-[consumo b]: Numero lido: 1654792197
-[producao]: Numero gerado: 1254139605
+[aviso]: Termino Solicitado. Aguardando threads...
 
-[aviso]: Maior numero gerado: 1512540406
-[aviso]: Menor numero gerado: 32644
+
+[aviso]: Maior numero gerado: 1868619858
+[aviso]: Menor numero gerado: 32925626[aviso]: Maior ocupacao de buffer: 4
+
+
+[aviso]: Aplicacao encerrada.
+
+[producao]: Numero gerado: 1399487941
+[consumo a]: Numero lido: 1399487941
+[producao]: Numero gerado: 1925763099
+[producao]: Numero gerado: 102522339
+[consumo a]: Numero lido: 102522339
+[producao]: Numero gerado: 1968260075
+[consumo b]: Numero lido: 1968260075
+[producao]: Numero gerado: 1168554728
+[producao]: Numero gerado: 1410030161
+[consumo a]: Numero lido: 1410030161
+[consumo b]: Numero lido: 1168554728
+[producao]: Numero gerado: 708881518
+
+[aviso]: Termino Solicitado. Aguardando threads...
+
+
+[aviso]: Maior numero gerado: 1968260075
+[aviso]: Menor numero gerado: 102522339[aviso]: Maior ocupacao de buffer: 3
+
+[aviso]: Aplicacao encerrada.
+
+[producao]: Numero gerado: 1956825026
+[consumo b]: Numero lido: 1956825026
+[producao]: Numero gerado: 1458961029
+[producao]: Numero gerado: 1600966751
+[consumo b]: Numero lido: 1600966751
+[consumo a]: Numero lido: 1458961029
+[producao]: Numero gerado: 1632116707
+[producao]: Numero gerado: 218617062
+[producao]: Numero gerado: 1775498208
+[consumo b]: Numero lido: 1775498208
+[consumo a]: Numero lido: 218617062
+[producao]: Numero gerado: 1476046457
+[producao]: Numero gerado: 1071993969
+[producao]: Numero gerado: 146112427
+
+[aviso]: Termino Solicitado. Aguardando threads...
+
+
+[aviso]: Maior numero gerado: 1956825026
+[aviso]: Menor numero gerado: 218617062
+[aviso]: Maior ocupacao de buffer: 4
+
+[aviso]: Aplicacao encerrada.
+
